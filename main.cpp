@@ -3,6 +3,7 @@
 using namespace std;
 int player1Score;
 int player2Score;
+int relayCount;
 class Ball {
 public:
 	float x, y;
@@ -31,10 +32,11 @@ public:
 		}
 	}
 	void ResetBall() {
-		x = GetScreenWidth() / 2;
+		x = speed_x > 0 ? GetScreenWidth() / 2 - 400 : GetScreenWidth() / 2 + 400;
 		y = GetScreenHeight() / 2;
 		int speed_choices[2] = { -1,1 };
 		speed_y *= speed_choices[GetRandomValue(0, 1)];
+		relayCount = 0;
 	}
 };
 class Player {
@@ -58,16 +60,17 @@ public:
 Ball ball;
 Player player1;
 Player player2;
-int main() {
-
-	const int screenWidth = 1280;
-	const int screenHeight = 800;
-#pragma region long ass class property definition
+bool isInMenu = true;
+bool fastBall = false;
+bool relayMode = false;
+const int screenWidth = 1280;
+const int screenHeight = 800;
+void setClassProperties() {
 	ball.radius = 20;
 	ball.x = screenWidth / 2;
 	ball.y = screenHeight / 2;
-	ball.speed_x = 7;
-	ball.speed_y = 7;
+	ball.speed_x = fastBall ? 15 : 7;
+	ball.speed_y = fastBall ? 15 : 7;
 	player1.width = 25;
 	player2.width = 25;
 	player1.height = 120;
@@ -82,28 +85,74 @@ int main() {
 	player1.down = KEY_DOWN;
 	player2.up = KEY_W;
 	player2.down = KEY_S;
-#pragma endregion
+}
+int main() {
 	InitWindow(screenWidth, screenHeight, "Pong");
+	SetExitKey(KEY_NULL);
 	SetTargetFPS(60);
+	setClassProperties();
 	while (!WindowShouldClose()) {
-		BeginDrawing();
-		ClearBackground(BLACK);
-		ball.Update();
-		ball.Draw();
-		player1.Update();
-		if (CheckCollisionCircleRec(Vector2{ ball.x, ball.y }, ball.radius, Rectangle{ player1.x, player1.y, player1.width, player1.height })) {
-			ball.speed_x = -(ball.speed_x);
+		if(isInMenu) {
+			if(IsKeyPressed(KEY_F)) {
+				fastBall = !fastBall;
+				if(fastBall) {
+					ball.speed_x = 15;
+					ball.speed_y = 15;
+				} else {
+					ball.speed_x = 7;
+					ball.speed_y = 7;
+				}
+			}
+			if(IsKeyPressed(KEY_R)) {
+				relayMode = !relayMode;
+			}
+			if(IsKeyPressed(KEY_ENTER)) {
+				isInMenu = false;
+			}
+			
+			BeginDrawing();
+			ClearBackground(BLACK);
+			DrawText("Pong", 40, 40, 160, WHITE);
+			DrawText("A simple raylib game by omger.", 40, 240, 40, WHITE);
+			DrawText("Player 1: Use up and down arrow keys.", 40, 320, 40, WHITE);
+			DrawText("Player 2: Use A and D keys.", 40, 360, 40, WHITE);
+			DrawText("Press ENTER to start", 40, 440, 80, WHITE);
+			DrawText(TextFormat("Fast ball, press F to toggle: %s", fastBall ? "ON" : "OFF"), 40, 540, 40, WHITE);
+			DrawText(TextFormat("Relay mode, press R to toggle: %s", relayMode ? "ON" : "OFF"), 40, 580, 40, WHITE);
+			EndDrawing();
+		} else {
+			BeginDrawing();
+			ClearBackground(BLACK);
+			
+			if(IsKeyPressed(KEY_ESCAPE)) {
+				isInMenu = true;
+				setClassProperties();
+				continue;
+			}
+			
+			ball.Update();
+			ball.Draw();
+			player1.Update();
+			if (CheckCollisionCircleRec(Vector2{ ball.x, ball.y }, ball.radius, Rectangle{ player1.x, player1.y, player1.width, player1.height })) {
+				ball.speed_x = -(ball.speed_x);
+				relayCount++;
+			}
+			player1.Draw();
+			player2.Update();
+			if (CheckCollisionCircleRec(Vector2{ ball.x, ball.y }, ball.radius, Rectangle{ player2.x, player2.y, player2.width, player2.height })) {
+				ball.speed_x = -(ball.speed_x);
+				relayCount++;
+			}
+			player2.Draw();
+			DrawLine(screenWidth / 2, 0, screenWidth / 2, screenHeight, WHITE);
+			if(relayMode) {
+				DrawText(TextFormat("%i", relayCount), screenWidth / 2 + 20, 20, 80, WHITE);
+			} else {
+				DrawText(TextFormat("%i", player2Score), screenWidth / 2 - 60, 20, 80, WHITE);
+				DrawText(TextFormat("%i", player1Score), screenWidth / 2 + 20, 20, 80, WHITE);
+			}
+			EndDrawing();
 		}
-		player1.Draw();
-		player2.Update();
-		if (CheckCollisionCircleRec(Vector2{ ball.x, ball.y }, ball.radius, Rectangle{ player2.x, player2.y, player2.width, player2.height })) {
-			ball.speed_x = -(ball.speed_x);
-		}
-		player2.Draw();
-		DrawLine(screenWidth / 2, 0, screenWidth / 2, screenHeight, WHITE);
-		DrawText(TextFormat("%i", player2Score), screenWidth / 2 - 60, 20, 80, WHITE);
-		DrawText(TextFormat("%i", player1Score), screenWidth / 2 + 20, 20, 80, WHITE);
-		EndDrawing();
 	}
 
 	return 0;
