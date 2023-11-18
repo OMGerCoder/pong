@@ -15,9 +15,6 @@ set(SOURCES
 
 # Create the executable
 add_executable(pong ${SOURCES})
-if (WIN32)
-    set_target_properties(${PROJECT_NAME} PROPERTIES WIN32_EXECUTABLE TRUE)
-endif()
 # Link against raylib
 target_link_libraries(pong PRIVATE raylib)
 if(APPLE)
