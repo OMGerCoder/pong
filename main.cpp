@@ -91,6 +91,8 @@ int lastCollisionTime;
 void setClassProperties(bool fastBall)
 {
 	relayCount = 0;
+	player1Score = 0;
+	player2Score = 0;
 	framesElapsedInGame = 0;
 	lastCollisionTime = 0;
 	ball.radius = 20;
